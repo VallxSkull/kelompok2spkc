@@ -348,6 +348,37 @@ with tab2:
         st.warning("Pilih minimal satu kriteria.")
         st.stop()
 
+    # ========== PROSES PROFIL ==========
+   
+    if 'apply_profile' in st.session_state and st.session_state.apply_profile:
+        prof_name = st.session_state.get('profile_to_apply')
+        profile_options = {
+            "Mahasiswa (Harga murah)": {'price':0.50, 'ram_num':0.15, 'memory_size':0.15, 'cpu_score':0.15, 'gpu_score':0.05},
+            "Pekerja Kantoran (Fokus Keseimbangan)": {'price':0.35, 'ram_num':0.20, 'memory_size':0.20, 'cpu_score':0.20, 'gpu_score':0.05},
+            "Desainer/Gamer (Fokus Performa)": {'price':0.10, 'ram_num':0.20, 'memory_size':0.15, 'cpu_score':0.25, 'gpu_score':0.30},
+        }
+        valid_profiles = {}
+        for name, prof in profile_options.items():
+            prof_filled = {k: prof.get(k, 0.0) for k in selected}
+            if sum(prof_filled.values()) > 0:
+                valid_profiles[name] = prof_filled
+        if prof_name in valid_profiles:
+            prof_weights = valid_profiles[prof_name].copy()
+            total = sum(prof_weights.values())
+            if total > 0:
+                for crit in prof_weights:
+                    prof_weights[crit] /= total
+                for crit in selected:
+                    st.session_state[f"weight_{crit}"] = float(prof_weights.get(crit, 0.0))
+        # Reset flag
+        st.session_state.apply_profile = False
+        if 'profile_to_apply' in st.session_state:
+            del st.session_state.profile_to_apply
+        st.rerun()
+
+    # ------------------------------
+    # Pengaturan Bobot dan Tipe Kriteria
+    # ------------------------------
     st.subheader("Pengaturan Bobot dan Tipe Kriteria")
 
     cols = st.columns(len(selected))
@@ -356,7 +387,9 @@ with tab2:
         with cols[i]:
             st.markdown(f"**{available[crit]['label']}**")
             is_benefit = st.checkbox("Benefit", value=available[crit]['default_benefit'], key=f"benefit_{crit}")
-            w = st.number_input("Bobot", min_value=0.0, max_value=1.0, value=0.20, step=0.01, key=f"weight_{crit}")
+            # Ambil nilai dari session state, default 0.20
+            default_weight = st.session_state.get(f"weight_{crit}", 0.20)
+            w = st.number_input("Bobot", min_value=0.0, max_value=1.0, value=default_weight, step=0.01, key=f"weight_{crit}")
             weights[crit] = {'weight': w, 'benefit': is_benefit}
 
     total_w = sum(v['weight'] for v in weights.values())
@@ -375,37 +408,32 @@ with tab2:
     ])
     st.dataframe(weight_df)
 
+    # ------------------------------
+    # Profil Bawaan
+    # ------------------------------
     st.subheader("Gunakan Profil Bawaan")
+
     profile_options = {
-        "Mahasiswa (Harga murah)": {'price':0.40, 'ram_num':0.20, 'memory_size':0.15, 'cpu_score':0.15, 'gpu_score':0.10},
-        "Pekerja Kantoran (RAM dan Storage)": {'price':0.20, 'ram_num':0.30, 'memory_size':0.25, 'cpu_score':0.15, 'gpu_score':0.10},
-        "Desainer/Gamer (Performa)": {'price':0.10, 'ram_num':0.20, 'memory_size':0.15, 'cpu_score':0.25, 'gpu_score':0.30},
-        "Seimbang": {'price':0.20, 'ram_num':0.20, 'memory_size':0.20, 'cpu_score':0.20, 'gpu_score':0.20},
+        "Mahasiswa (Harga murah)": {'price':0.50, 'ram_num':0.15, 'memory_size':0.15, 'cpu_score':0.15, 'gpu_score':0.05},
+        "Pekerja Kantoran (Fokus Keseimbangan)": {'price':0.35, 'ram_num':0.20, 'memory_size':0.20, 'cpu_score':0.20, 'gpu_score':0.05},
+        "Desainer/Gamer (Fokus Performa)": {'price':0.10, 'ram_num':0.20, 'memory_size':0.15, 'cpu_score':0.25, 'gpu_score':0.30},
     }
+
     valid_profiles = {}
     for name, prof in profile_options.items():
-        if all(k in selected for k in prof.keys()):
-            valid_profiles[name] = prof
-        else:
-            prof_filled = {k: prof.get(k, 0.0) for k in selected}
-            if sum(prof_filled.values()) > 0:
-                valid_profiles[name] = prof_filled
+        prof_filled = {k: prof.get(k, 0.0) for k in selected}
+        if sum(prof_filled.values()) > 0:
+            valid_profiles[name] = prof_filled
 
     if valid_profiles:
         chosen_profile = st.selectbox("Pilih profil", list(valid_profiles.keys()))
-        if st.button("Terapkan Bobot Profil"):
-            prof_weights = valid_profiles[chosen_profile]
-            total = sum(prof_weights.values())
-            if total > 0:
-                for crit in prof_weights:
-                    prof_weights[crit] /= total
-                for crit in selected:
-                    weights[crit]['weight'] = prof_weights.get(crit, 0.0)
-                st.session_state.weights = weights
-                st.rerun()
+        if st.button("Terapkan Bobot Profil", key="btn_terapkan_profil_utama"):
+            # Simpan pilihan profil ke session state, dan set flag apply_profile
+            st.session_state.profile_to_apply = chosen_profile
+            st.session_state.apply_profile = True
+            st.rerun()
     else:
         st.info("Tidak ada profil yang cocok dengan kriteria yang dipilih.")
-
 # ====================================================================
 # TAB 3: PERHITUNGAN SAW
 # ====================================================================
