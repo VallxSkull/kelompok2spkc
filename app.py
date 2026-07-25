@@ -426,6 +426,7 @@ with tab2:
             valid_profiles[name] = prof_filled
 
     if valid_profiles:
+<<<<<<< HEAD
         chosen_profile = st.selectbox("Pilih profil", list(valid_profiles.keys()))
         if st.button("Terapkan Bobot Profil", key="btn_terapkan_profil_utama"):
             # Simpan pilihan profil ke session state, dan set flag apply_profile
@@ -434,6 +435,29 @@ with tab2:
             st.rerun()
     else:
         st.info("Tidak ada profil yang cocok dengan kriteria yang dipilih.")
+=======
+            chosen_profile = st.selectbox("Pilih profil", list(valid_profiles.keys()))
+            if st.button("Terapkan Bobot Profil"):
+             
+                prof_weights = valid_profiles[chosen_profile].copy() 
+                
+           
+                total = sum(prof_weights.values())
+                if total > 0:
+                    for crit in prof_weights:
+                        prof_weights[crit] /= total
+                    
+            
+                    for crit in selected:
+                  
+                        st.session_state[f"weight_{crit}"] = float(prof_weights.get(crit, 0.0))
+                    
+              
+                    st.rerun()
+        else:
+            st.info("Tidak ada profil yang cocok dengan kriteria yang dipilih.")
+
+>>>>>>> 2a4d48270727e6a2b1ac63b12e1bc94f45cbc5cc
 # ====================================================================
 # TAB 3: PERHITUNGAN SAW
 # ====================================================================
