@@ -391,27 +391,27 @@ with tab2:
             if sum(prof_filled.values()) > 0:
                 valid_profiles[name] = prof_filled
 
-if valid_profiles:
-        chosen_profile = st.selectbox("Pilih profil", list(valid_profiles.keys()))
-        if st.button("Terapkan Bobot Profil"):
-         
-            prof_weights = valid_profiles[chosen_profile].copy() 
+    if valid_profiles:
+            chosen_profile = st.selectbox("Pilih profil", list(valid_profiles.keys()))
+            if st.button("Terapkan Bobot Profil"):
+             
+                prof_weights = valid_profiles[chosen_profile].copy() 
+                
+           
+                total = sum(prof_weights.values())
+                if total > 0:
+                    for crit in prof_weights:
+                        prof_weights[crit] /= total
+                    
             
-       
-            total = sum(prof_weights.values())
-            if total > 0:
-                for crit in prof_weights:
-                    prof_weights[crit] /= total
-                
-        
-                for crit in selected:
+                    for crit in selected:
+                  
+                        st.session_state[f"weight_{crit}"] = float(prof_weights.get(crit, 0.0))
+                    
               
-                    st.session_state[f"weight_{crit}"] = float(prof_weights.get(crit, 0.0))
-                
-                # Rerun untuk me-refresh layar
-                st.rerun()
-    else:
-        st.info("Tidak ada profil yang cocok dengan kriteria yang dipilih.")
+                    st.rerun()
+        else:
+            st.info("Tidak ada profil yang cocok dengan kriteria yang dipilih.")
 
 # ====================================================================
 # TAB 3: PERHITUNGAN SAW
